@@ -66,21 +66,6 @@ app.get("/getstudents", async (req, res) => {
   }
 });
 
-// app.post("/signup", async (req, res) => {
-//   try {
-//     const sql = "INSERT INTO login (name,email,password) VALUES (?,?,?) ";
-//     const values = [req.body.name, req.body.email, req.body.password];
-//     db.query(sql, [values], (err, data) => {
-//       if (err) {
-//         return res.json("Error");
-//       }
-//       return res.json(data);
-//     });
-//   } catch (error) {
-//     console.log(error);
-//   }
-// });
-
 app.post("/signup", async (req, res) => {
   try {
     const sql =
@@ -96,21 +81,6 @@ app.post("/signup", async (req, res) => {
     console.log(error);
   }
 });
-
-// app.post("/login", (req, res) => {
-//   const sql = "SELECT * FROM login WHERE 'email'=? AND 'password'=? ";
-
-//   db.query(sql, [req.body.email, req.body.password], (err, data) => {
-//     if (err) {
-//       return res.json("Error");
-//     }
-//     if (data.length > 0) {
-//       return res.json("success");
-//     } else {
-//       return res.json("failed");
-//     }
-//   });
-// });
 
 app.post("/login", (req, res) => {
   const sql = "SELECT * FROM login WHERE email=? AND password=?";
