@@ -17,8 +17,8 @@ function Login() {
         password,
       })
       .then((res) => {
-        if (res.data === "success") {
-          localStorage.setItem("user", JSON.stringify(res.data))
+        if (res.data.status === "success") {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
           navigate("/");
         } else {
           alert("Incorrect Email and Password....");

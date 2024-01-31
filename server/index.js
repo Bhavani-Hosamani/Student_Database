@@ -1,26 +1,19 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const mysql = require("mysql2");
 const cors = require("cors");
-const port = 5000;
+const { Pool } = require("pg");
+const PORT = 5000;
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
 app.use(express.json());
 
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
-);
-app.use(express.json());
-
-const db = mysql.createConnection({
+const db = new Pool({
   host: "localhost",
-  user: "root",
+  user: "postgres",
   password: "root",
   database: "crud",
+  port: "5432",
 });
 
 db.connect(function (err) {
@@ -29,18 +22,19 @@ db.connect(function (err) {
 });
 
 app.post("/addstudents", async (req, res) => {
-  const { rollNumber, name, email, phoneNumber } = req.body;
+  const { rollnumber, name, email, phonenumber } = req.body;
 
-  if (!rollNumber || !name || !email || !phoneNumber) {
+  if (!rollnumber || !name || !email || !phonenumber) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
   const sql =
-    "INSERT INTO student (rollNumber, name, email, phoneNumber) VALUES (?, ?, ?, ?)";
-  const values = [rollNumber, name, email, phoneNumber];
+    "INSERT INTO student (rollnumber, name, email, phonenumber) VALUES ($1, $2, $3, $4)";
+
+  const values = [rollnumber, name, email, phonenumber];
 
   try {
-    const result = await db.promise().query(sql, values);
+    const result = await db.query(sql, values);
     console.log("Student added to the database", result);
     return res
       .status(200)
@@ -53,7 +47,7 @@ app.post("/addstudents", async (req, res) => {
 
 app.get("/getstudents", async (req, res) => {
   try {
-    const [results] = await db.promise().query("SELECT * FROM student");
+    const { rows: results } = await db.query("SELECT * FROM student");
 
     console.log("Students selected from the database");
     return res.status(200).json({
@@ -67,36 +61,44 @@ app.get("/getstudents", async (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
+  // console.log("hello");
   try {
-    const sql =
-      "INSERT INTO login (`name`, `email`, `password`) VALUES (?, ?, ?)";
+    const sql = "INSERT INTO login (name, email, password) VALUES ($1, $2, $3)";
     const values = [req.body.name, req.body.email, req.body.password];
-    db.query(sql, values, (err, data) => {
-      if (err) {
-        return res.json("Error");
-      }
-      return res.json(data);
-    });
+
+    await db.query(sql, values);
+    console.log("User added to the database");
+    return res.json({ status: "success" });
   } catch (error) {
-    console.log(error);
+    console.error("Error inserting user:", error);
+    return res
+      .status(500)
+      .json({ status: "failed", error: "Error inserting user" });
   }
 });
 
 app.post("/login", (req, res) => {
-  const sql = "SELECT * FROM login WHERE email=? AND password=?";
+  // console.log("hii");
+  const sql = "SELECT * FROM login WHERE email=$1 AND password=$2";
+  let data; // Declare a variable to store the result
 
-  db.query(sql, [req.body.email, req.body.password], (err, data) => {
+  db.query(sql, [req.body.email, req.body.password], (err, result) => {
     if (err) {
-      return res.json("Error");
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
+
+    data = result.rows;
+
     if (data.length > 0) {
-      return res.json("success");
+      // console.log("success");
+      return res.json({ status: "success", user: data[0] });
     } else {
-      return res.json("failed");
+      return res.json({ status: "failed", error: "Invalid credentials" });
     }
   });
 });
 
-app.listen(5000, () => {
-  console.log("listening");
+app.listen(PORT, () => {
+  console.log(`listening on port ${PORT}`);
 });

@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { DownloadTableExcel } from "react-export-table-to-excel";
 
 function Student() {
-  const [rollNumber, setRollNumber] = useState("");
+  const [rollnumber, setRollNumber] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phonenumber, setPhoneNumber] = useState("");
   const [students, setStudents] = useState([]);
   const [toggleModal, setToggleModal] = useState(false);
   const tableRef = useRef(null);
@@ -45,10 +45,10 @@ function Student() {
     setToggleModal(false);
     try {
       const response = await axios.post("http://localhost:5000/addstudents", {
-        rollNumber: rollNumber,
+        rollnumber: rollnumber,
         name: name,
         email: email,
-        phoneNumber: phoneNumber,
+        phonenumber: phonenumber,
       });
       if (response) {
         getAllStudents();
@@ -138,7 +138,6 @@ function Student() {
               placeholder="Search..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              
             />
           </div>
           <div>
@@ -166,10 +165,10 @@ function Student() {
           <tbody>
             {filteredStudents?.map((student, index) => (
               <tr key={index}>
-                <td>{student.rollNumber}</td>
+                <td>{student.rollnumber}</td>
                 <td>{student.name}</td>
                 <td>{student.email}</td>
-                <td>{student.phoneNumber}</td>
+                <td>{student.phonenumber}</td>
               </tr>
             ))}
           </tbody>
@@ -243,7 +242,7 @@ function Student() {
               <input
                 type="text"
                 placeholder="Roll Number"
-                value={rollNumber}
+                value={rollnumber}
                 onChange={(e) => setRollNumber(e.target.value)}
               />
               <br />
@@ -264,7 +263,7 @@ function Student() {
               <input
                 type="number"
                 placeholder="Phone Number"
-                value={phoneNumber}
+                value={phonenumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
               />
             </div>
