@@ -21,7 +21,12 @@ function Student() {
 
   const getAllStudents = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/getstudents");
+      const token = JSON.parse(localStorage.getItem("token"));
+      const response = await axios.get("http://localhost:5000/getstudents", {
+        headers: {
+          "auth-token": token,
+        },
+    });
       setStudents(response?.data.values);
     } catch (error) {
       console.log(error);
@@ -80,7 +85,7 @@ function Student() {
   }, [searchInput, students]);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem("token"));
     if (!user) {
       navigate("/login");
     }

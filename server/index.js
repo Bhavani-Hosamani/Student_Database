@@ -1,8 +1,14 @@
+var fetchuser = require("./middleware/fetchuser");
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { Pool } = require("pg");
+var Jwt = require("jsonwebtoken");
+
 const PORT = 5000;
+
+const Jwtkey = "bhavani@H123";
 
 const app = express();
 app.use(cors());
@@ -45,7 +51,7 @@ app.post("/addstudents", async (req, res) => {
   }
 });
 
-app.get("/getstudents", async (req, res) => {
+app.get("/getstudents", fetchuser, async (req, res) => {
   try {
     const { rows: results } = await db.query("SELECT * FROM student");
 
@@ -68,7 +74,16 @@ app.post("/signup", async (req, res) => {
 
     await db.query(sql, values);
     console.log("User added to the database");
-    return res.json({ status: "success" });
+
+    // Fetch the user after insertion
+    const result = await db.query("SELECT * FROM login WHERE email = $1", [
+      req.body.email,
+    ]);
+
+    const user = result.rows[0];
+    delete user.password;
+    const token = Jwt.sign({ result }, Jwtkey, { expiresIn: "1d" });
+    return res.json({ status: "success", result, auth: token });
   } catch (error) {
     console.error("Error inserting user:", error);
     return res
@@ -77,27 +92,35 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.post("/login", (req, res) => {
-  // console.log("hii");
-  const sql = "SELECT * FROM login WHERE email=$1 AND password=$2";
-  let data; // Declare a variable to store the result
+app.post("/login", async (req, res) => {
+  try {
+    const sql = "SELECT * FROM login WHERE email=$1 AND password=$2";
+    const result = await db.query(sql, [req.body.email, req.body.password]);
 
-  db.query(sql, [req.body.email, req.body.password], (err, result) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-
-    data = result.rows;
-
-    if (data.length > 0) {
-      // console.log("success");
-      return res.json({ status: "success", user: data[0] });
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      delete user.password;
+      const token = Jwt.sign({ user }, Jwtkey, { expiresIn: "1h" });
+      return res.json({ status: "success", user, auth: token });
     } else {
       return res.json({ status: "failed", error: "Invalid credentials" });
     }
-  });
+  } catch (error) {
+    console.error("Database error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
+
+// app.post("/getuser", fetchuser, async (req, res) => {
+//   try {
+//     userId = req.user.user;
+//     const user = await user.findById(userId).select("-password");
+//     res.send(user);
+//   } catch (error) {
+//     console.error("error:", error);
+//     return res.status(500).json({ error: "Internal server error" });
+//   }
+// });
 
 app.listen(PORT, () => {
   console.log(`listening on port ${PORT}`);
